@@ -1,0 +1,8 @@
+---
+global:
+  scrape_interval:     120s
+  evaluation_interval: 15s
+scrape_configs:
+  - job_name: github-pull-requests
+    static_configs:
+    - targets: ['github-pr-exporter:8080']

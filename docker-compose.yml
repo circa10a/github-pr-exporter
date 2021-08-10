@@ -1,0 +1,47 @@
+version: '3'
+
+services:
+  github-pr-exporter:
+      container_name: github-pr-exporter
+      image: circa10a/github-pr-exporter
+      volumes:
+        - ./examples/config.yaml:/config.yaml
+      ports:
+        - 8080:8080
+
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.console.libraries=/usr/share/prometheus/console_libraries
+      - --web.console.templates=/usr/share/prometheus/consoles
+      - --storage.tsdb.retention.time=30d
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - 9090:9090
+    depends_on:
+      - github-pr-exporter
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./monitoring/grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ./monitoring/grafana/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml
+      - ./monitoring/grafana/dashboards/:/etc/grafana/provisioning/dashboards/
+      - ./monitoring/grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+      - grafana_data:/var/lib/grafana
+    ports:
+      - 3000:3000
+    depends_on:
+      - prometheus
+
+volumes:
+  prometheus_data:
+  grafana_data:
