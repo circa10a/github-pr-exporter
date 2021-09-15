@@ -16,14 +16,15 @@ Once started, application will be accessible at http://localhost:8080/metrics
 ### CLI
 
 ```log
-# Build
-make build
+# Install with Go
+go install github.com/circa10a/github-pr-exporter@latest
+
 # Execute
-❯ ./github-pr-exporter -h
+❯ github-pr-exporter -h
 Usage of ./github-pr-exporter:
       --config string       Path to config file (default "./config.yaml")
       --days-ago int        How many days back to search for pull requests (default 90)
-      --ignore-user-repos   Whether or not to ignore the user's own repos or not
+      --ignore-user-repos   Ignore the user's own repos
       --interval int        How many seconds to wait before refreshing pull request data. Defaults to 6 hours (default 21600)
       --port int            What port to listen on (default 8080)
 pflag: help requested
