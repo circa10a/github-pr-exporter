@@ -1,13 +1,13 @@
 BINARY=github-pr-exporter
 BUILD_FLAGS=-ldflags="-s -w"
 PROJECT=circa10a/github-pr-exporter
-VERSION=0.1.0
+VERSION=0.2.0
 
 build:
 	go build -o $(BINARY)
 
 run:
-	go run .
+	go run . --config examples/config.yaml
 
 compile:
 	GOOS=linux GOARCH=amd64 go build $(BUILD_FLAGS) -o bin/linux/amd64/$(BINARY)

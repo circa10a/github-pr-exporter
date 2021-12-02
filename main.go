@@ -10,7 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 
-	"github.com/google/go-github/v37/github"
+	"github.com/google/go-github/v41/github"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -63,7 +63,12 @@ func init() {
 func main() {
 	config := &Config{}
 	config.read()
-	log.Infof("read %d users from config file", len(config.Config.Users))
+
+	numberOfUsers := len(config.Config.Users)
+	if numberOfUsers == 0 {
+		log.Fatal("oo users in config file. nothing to do. exiting...")
+	}
+	log.Infof("read %d users from config file", numberOfUsers)
 
 	ctx := context.Background()
 	client := github.NewClient(nil)
