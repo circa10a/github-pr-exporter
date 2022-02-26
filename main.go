@@ -66,7 +66,7 @@ func main() {
 
 	numberOfUsers := len(config.Config.Users)
 	if numberOfUsers == 0 {
-		log.Fatal("oo users in config file. nothing to do. exiting...")
+		log.Fatal("no users in config file. nothing to do. exiting...")
 	}
 	log.Infof("read %d users from config file", numberOfUsers)
 
