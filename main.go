@@ -23,6 +23,10 @@ import (
 // User is a github user
 type User string
 
+func (u User) String() string {
+	return string(u)
+}
+
 // Users are a slice of github users
 type Users []User
 
@@ -136,9 +140,11 @@ func collectPRMetrics(ctx context.Context, config *Config, client *github.Client
 	now := time.Now()
 	past := now.AddDate(0, 0, -*daysAgo)
 	beginningSearchDate := fmt.Sprintf("%d-%02d-%02d", past.Year(), past.Month(), past.Day())
+
 	// Track total pull requests for the total counter
 	pullRequestCount := 0
 	log.Info("Searching for pull requests")
+
 	// Loop all users passed in via config file
 	for _, user := range config.Config.Users {
 		// Get all pull requests opened by a user
@@ -151,15 +157,19 @@ func collectPRMetrics(ctx context.Context, config *Config, client *github.Client
 				"link":       pullRequest.PullRequestURL,
 				"status":     pullRequest.Status,
 			}).Set(1)
+
 			// Increase the total counter
 			pullRequestCount++
 		}
+
 		// Unauthenticated clients rate limit is 10 requests per minute
 		// This sleep ensures no rate limits occur. The result is 1000 user searches every 90 minutes
 		time.Sleep(time.Second * defaultRateLimitInteral)
 	}
+
 	// Set total counter
 	pullRequestsTotalGauge.With(prometheus.Labels{}).Set(float64(pullRequestCount))
+
 	// Wait for configured refresh interval
 	log.Infof("Finished searching for pull requests. Sleeping for %d seconds", *interval)
 }
