@@ -57,7 +57,7 @@ First, update `examples/config.yaml`
 Then, to start a preconfigured prometheus + grafana + exporter stack:
 
 ```bash
-docker-compose up
+docker compose up
 ```
 
 Then you can browse the preconfigured dashboard at http://localhost:3000/d/h_PRluMnk/pull-requests?orgId=1

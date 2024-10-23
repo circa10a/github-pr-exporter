@@ -3,14 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
-	log "github.com/sirupsen/logrus"
+	log "github.com/charmbracelet/log"
 	"gopkg.in/yaml.v2"
 
 	"github.com/google/go-github/v43/github"
@@ -22,10 +19,6 @@ import (
 
 // User is a github user
 type User string
-
-func (u User) String() string {
-	return string(u)
-}
 
 // Users are a slice of github users
 type Users []User
@@ -39,14 +32,16 @@ type Config struct {
 
 // read reads in configuration from the config file
 func (c *Config) read() *Config {
-	yamlFile, err := ioutil.ReadFile(*configFile)
+	yamlFile, err := os.ReadFile(*configFile)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	err = yaml.Unmarshal(yamlFile, c)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	return c
 }
 
@@ -63,9 +58,6 @@ var (
 
 func init() {
 	flag.Parse()
-	log.SetFormatter(&log.TextFormatter{
-		FullTimestamp: true,
-	})
 }
 
 func main() {
@@ -76,28 +68,13 @@ func main() {
 	if numberOfUsers == 0 {
 		log.Fatal("no users in config file. nothing to do. exiting...")
 	}
+
 	log.Infof("read %d users from config file", numberOfUsers)
 
 	// To cancel our goroutines
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx := context.Background()
 	client := github.NewClient(nil)
-	server := createHttpServer(*port)
-
-	// Ensure we can cancel all of our goroutines
-	go func(ctx context.Context) {
-		c := make(chan os.Signal, 1)
-		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
-		<-c
-
-		if err := server.Shutdown(ctx); err != nil {
-			if err != context.Canceled {
-				log.Fatalf("Error shutting down web server")
-			}
-			log.Info("Web server shutdown successfully")
-		}
-
-		cancel()
-	}(ctx)
+	server := newHttpServer(*port)
 
 	// Run then exporter
 	go func(ctx context.Context) {
@@ -122,14 +99,15 @@ func main() {
 	}
 }
 
-// createHttpServer creates a new http.Server for our prometheus handler
-func createHttpServer(port int) *http.Server {
+// newHttpServer creates a new http.Server for our prometheus handler
+func newHttpServer(port int) *http.Server {
 	mux := http.NewServeMux()
 	mux.Handle("/metrics", promhttp.Handler())
 
 	server := &http.Server{
-		Addr:    fmt.Sprintf(":%d", port),
-		Handler: mux,
+		Addr:        fmt.Sprintf(":%d", port),
+		Handler:     mux,
+		ReadTimeout: time.Second * 5,
 	}
 
 	return server
@@ -152,7 +130,7 @@ func collectPRMetrics(ctx context.Context, config *Config, client *github.Client
 		for _, pullRequest := range pullRequests {
 			// Create new metric for each pull request
 			pullRequestsGauge.With(prometheus.Labels{
-				"user":       user.String(),
+				"user":       string(user),
 				"created_at": pullRequest.CreatedAt,
 				"link":       pullRequest.PullRequestURL,
 				"status":     pullRequest.Status,

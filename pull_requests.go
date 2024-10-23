@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/google/go-github/v43/github"
@@ -19,22 +18,16 @@ type PullRequest struct {
 
 type PullRequests []PullRequest
 
-func (p *PullRequests) filterUserRepos() {
-	filteredPullRequests := PullRequests{}
-	for _, pr := range *p {
-		userNamespace := strings.Split(pr.PullRequestURL, "/")[3]
-		if pr.User != userNamespace {
-			filteredPullRequests = append(filteredPullRequests, pr)
-		}
-	}
-	*p = filteredPullRequests
-}
-
 func (u User) getPullRequests(ctx context.Context, client *github.Client, beginningSearchDate string, filterUserRepos bool) PullRequests {
 	userPullRequests := PullRequests{}
 
 	// GitHub Search API only supports strings of 256 chars
 	searchString := fmt.Sprintf("type:pr author:%s created:>=%s", u, beginningSearchDate)
+
+	if filterUserRepos {
+		searchString += fmt.Sprintf(" -user:%s", u)
+	}
+
 	search, _, err := client.Search.Issues(ctx, searchString, &github.SearchOptions{})
 	if err != nil {
 		log.Error(err)
@@ -48,10 +41,6 @@ func (u User) getPullRequests(ctx context.Context, client *github.Client, beginn
 			Status:         result.GetState(),
 		}
 		userPullRequests = append(userPullRequests, pr)
-	}
-
-	if filterUserRepos {
-		userPullRequests.filterUserRepos()
 	}
 
 	return userPullRequests

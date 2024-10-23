@@ -1,9 +1,7 @@
-version: '3'
-
 services:
   github-pr-exporter:
       container_name: github-pr-exporter
-      image: circa10a/github-pr-exporter
+      build: .
       volumes:
         - ./examples/config.yaml:/config.yaml
       ports:
@@ -33,7 +31,6 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ./monitoring/grafana/grafana.ini:/etc/grafana/grafana.ini
-      - ./monitoring/grafana/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml
       - ./monitoring/grafana/dashboards/:/etc/grafana/provisioning/dashboards/
       - ./monitoring/grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
       - grafana_data:/var/lib/grafana
